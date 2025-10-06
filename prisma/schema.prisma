@@ -12,6 +12,11 @@ enum CmsPageStatus {
   published
 }
 
+enum CmsPageTemplate {
+  default
+  benefits_for_patients
+}
+
 model Page {
   id             String         @id @default(uuid())
   slug           String         @unique
@@ -22,6 +27,8 @@ model Page {
   heroImage      String?
   content        String
   status         CmsPageStatus  @default(draft)
+  template       CmsPageTemplate @default(default)
+  templateData   Json?
   seoTitle       String?
   seoDescription String?
   createdAt      DateTime       @default(now())

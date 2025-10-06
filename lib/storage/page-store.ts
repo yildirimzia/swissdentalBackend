@@ -31,6 +31,13 @@ function mapInputToCreateData(input: CmsPageCreateInput): Prisma.PageCreateInput
     heroImage: sanitizeOptional(input.heroImage),
     content: input.content.trim(),
     status: input.status ?? "draft",
+    template: input.template ?? "default",
+    templateData:
+      input.templateData === undefined
+        ? undefined
+        : input.templateData === null
+        ? Prisma.JsonNull
+        : (input.templateData as Prisma.InputJsonValue),
     seoTitle: sanitizeOptional(input.seoTitle),
     seoDescription: sanitizeOptional(input.seoDescription),
   };
@@ -51,6 +58,15 @@ function mapInputToUpdateData(input: CmsPageUpdateInput): Prisma.PageUpdateInput
 
   if (input.status !== undefined) {
     data.status = input.status;
+  }
+  if (input.template !== undefined) {
+    data.template = input.template;
+  }
+  if (input.templateData !== undefined) {
+    data.templateData =
+      input.templateData === null
+        ? Prisma.JsonNull
+        : (input.templateData as Prisma.InputJsonValue);
   }
 
   if (input.excerpt !== undefined) {

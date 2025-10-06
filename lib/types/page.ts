@@ -1,9 +1,15 @@
-import { CmsPageStatus as PrismaCmsPageStatus, Page } from "@prisma/client";
+import {
+  CmsPageStatus as PrismaCmsPageStatus,
+  CmsPageTemplate as PrismaCmsPageTemplate,
+  Page,
+  Prisma,
+} from "@prisma/client";
 
 export type CmsPageStatus = PrismaCmsPageStatus;
+export type CmsPageTemplate = PrismaCmsPageTemplate;
 export type CmsPage = Page;
 
-export interface CmsPageBase {
+export interface CmsPageCreateInput {
   slug: string;
   title: string;
   excerpt?: string;
@@ -12,15 +18,19 @@ export interface CmsPageBase {
   heroImage?: string;
   content: string;
   status?: CmsPageStatus;
+  template?: CmsPageTemplate;
+  templateData?: Prisma.JsonValue;
   seoTitle?: string;
   seoDescription?: string;
 }
 
-export type CmsPageCreateInput = CmsPageBase;
-
-export type CmsPageUpdateInput = Partial<Omit<CmsPageBase, "slug" | "title" | "content">> & {
+export type CmsPageUpdateInput = Partial<
+  Omit<CmsPageCreateInput, "slug" | "title" | "content">
+> & {
   slug?: string;
   title?: string;
   content?: string;
   status?: CmsPageStatus;
+  template?: CmsPageTemplate;
+  templateData?: Prisma.JsonValue;
 };

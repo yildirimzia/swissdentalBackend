@@ -15,9 +15,14 @@ const pageSchema = z.object({
   excerpt: z.string().optional(),
   heroTitle: z.string().optional(),
   heroSubtitle: z.string().optional(),
-  heroImage: z.string().url().optional(),
-  content: z.string().min(10, "Content must contain at least 10 characters"),
+  heroImage: z.string().optional(),
+  content: z
+    .string()
+    .optional()
+    .transform((value) => (typeof value === "string" ? value.trim() : "")),
   status: z.enum(["draft", "published"]).default("draft"),
+  template: z.enum(["default", "benefits_for_patients"]).default("default"),
+  templateData: z.any().optional(),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
 });

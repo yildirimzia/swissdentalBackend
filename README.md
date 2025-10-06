@@ -10,6 +10,7 @@ Bu proje, Swiss Dental Solutions web sitesinin içeriklerini yönetebilmek için
 - Hero başlık, alt başlık ve görsel alanları
 - SEO başlığı ve açıklaması tanımlayabilme
 - PostgreSQL + Prisma tabanlı kalıcı veri katmanı
+- Sayfa şablonları desteği (ör. `benefits_for_patients`) ve şablona özel alanlar
 - REST API üzerinden içeriklere erişim: `GET /api/pages`, `POST /api/pages`, `PUT /api/pages/:slug`, `DELETE /api/pages/:slug`
 
 ## Başlangıç

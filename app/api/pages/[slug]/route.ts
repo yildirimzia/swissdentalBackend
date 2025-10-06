@@ -16,9 +16,14 @@ const updateSchema = z
     excerpt: z.string().optional(),
     heroTitle: z.string().optional(),
     heroSubtitle: z.string().optional(),
-    heroImage: z.string().url().optional(),
-    content: z.string().min(10).optional(),
+    heroImage: z.string().optional(),
+    content: z
+      .string()
+      .optional()
+      .transform((value) => (typeof value === "string" ? value.trim() : undefined)),
     status: z.enum(["draft", "published"]).optional(),
+    template: z.enum(["default", "benefits_for_patients"]).optional(),
+    templateData: z.any().optional(),
     seoTitle: z.string().optional(),
     seoDescription: z.string().optional(),
   })

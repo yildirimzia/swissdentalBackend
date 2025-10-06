@@ -1,4 +1,4 @@
-const { PrismaClient, CmsPageStatus } = require("@prisma/client");
+const { PrismaClient, CmsPageStatus, CmsPageTemplate } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
@@ -19,6 +19,7 @@ async function main() {
       content:
         "## Dynamic Content\n\nThis is placeholder content for the test page. You can update it from the CMS dashboard.\n\n- Manage sections effortlessly\n- Preview your copy instantly\n- Publish when ready",
       status: CmsPageStatus.published,
+      template: CmsPageTemplate.default,
       seoTitle: "Swiss Dental | Test Page",
       seoDescription: "An example dynamic page served by the Swiss Dental CMS.",
       createdAt: timestamp,
