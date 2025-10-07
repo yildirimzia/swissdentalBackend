@@ -1016,57 +1016,61 @@ export default function PageDashboard() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-primary-50 via-cream to-white">
-      <aside className="relative hidden w-72 flex-col justify-between border-r border-primary-100 bg-gradient-to-b from-mint-dark via-primary-600 to-primary-700 p-8 text-white shadow-strong xl:flex">
-        <div className="space-y-10">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs uppercase tracking-[0.35em] text-white/70">
-              SDS CMS
-            </span>
-            <h1 className="mt-6 text-2xl font-semibold leading-snug">
-              Swiss Dental Solutions
-            </h1>
-            <p className="mt-4 text-sm text-white/70">
+      <aside className="relative hidden w-80 flex-col justify-between bg-[#033f3a] text-white xl:flex">
+        <div className="flex flex-1 flex-col gap-10 p-8">
+          <div className="rounded-3xl bg-white/8 px-6 py-8">
+            <h1 className="text-xl font-semibold leading-snug">Swiss Dental Solutions</h1>
+            <p className="mt-4 text-sm text-white/80">
               İçeriklerinizi tek noktadan yönetin, yayınlayın ve anında web sitesine yansıtın.
             </p>
+            <Button
+              type="button"
+              onClick={() => activateSection("create")}
+              className="mt-6 w-full justify-center rounded-2xl bg-white text-primary-600 shadow-soft hover:bg-primary-50"
+              variant="ghost"
+            >
+              Sayfa oluştur
+            </Button>
           </div>
 
-          <nav className="space-y-2">
+          <nav className="space-y-4">
+            <p className="text-xs uppercase tracking-[0.35em] text-white/60">Gezinme</p>
             {navigationItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => activateSection(item.id)}
                 className={clsx(
-                  "w-full rounded-2xl px-4 py-3 text-left transition",
+                  "flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition",
                   activeSection === item.id
-                    ? "bg-white text-primary-700 shadow-dental"
-                    : "bg-white/10 text-white/80 hover:bg-white/15",
+                    ? "bg-white/20 text-white shadow-dental"
+                    : "bg-white/5 text-white/75 hover:bg-white/15",
                 )}
               >
-                <span className="block text-sm font-semibold">{item.label}</span>
-                <span className="mt-1 block text-xs text-white/60">{item.description}</span>
+                <span className="font-medium">{item.label}</span>
+                <span className="text-xs text-white/50">›</span>
               </button>
             ))}
           </nav>
 
-          <div className="space-y-2">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/70">Şablonlar</p>
-            <div className="space-y-2 text-sm text-white/80">
+          <div className="space-y-3">
+            <p className="text-xs uppercase tracking-[0.35em] text-white/60">Şablonlar</p>
+            <div className="space-y-3">
               {TEMPLATE_OPTIONS.map((option) => (
-                <div key={option.id} className="rounded-xl border border-white/20 bg-white/10 p-3">
-                  <p className="font-semibold text-white">{option.label}</p>
-                  <p className="text-xs text-white/70">{option.description}</p>
+                <div
+                  key={option.id}
+                  className="rounded-2xl border border-white/15 bg-white/8 p-4 shadow-soft"
+                >
+                  <p className="text-sm font-semibold text-white">{option.label}</p>
+                  <p className="mt-1 text-xs text-white/70">{option.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="space-y-3 text-sm text-white/70">
-          <p className="font-semibold text-white">İpucu</p>
-          <p>
-            Şablon verileri form alanları üzerinden doldurulur. Her blok yayına hazır olduğunda frontend’de otomatik gösterilir.
-          </p>
+        <div className="border-t border-white/10 p-6 text-xs text-white/60">
+          Şablon verilerini düzenlerken alanları boş bırakmanız durumunda varsayılan içerik kullanılır.
         </div>
       </aside>
 
