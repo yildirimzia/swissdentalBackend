@@ -1510,22 +1510,107 @@ export default function PageDashboard() {
                               }
                             }}
                             className={clsx(
-                              "relative h-32 w-full border-b-2 transition-all cursor-pointer",
+                              "relative h-32 w-full border-b-2 transition-all cursor-pointer overflow-hidden",
                               isSelected ? "border-primary-200 bg-gradient-to-br from-white to-primary-50/50" : "border-gray-100 bg-gradient-to-br from-gray-50 to-white hover:from-primary-50/30 hover:to-primary-100/30"
                             )}
                           >
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className={clsx(
-                                "flex h-20 w-20 items-center justify-center rounded-2xl text-5xl transition-all",
-                                isSelected 
-                                  ? "bg-white shadow-soft scale-110" 
-                                  : "bg-gradient-to-br from-primary-50 to-mint-pale/50 group-hover:scale-105"
-                              )}>
-                                {component.icon}
+                            {/* Mini Preview Designs */}
+                            {component.id === 'whyCeramic' && (
+                              <div className="absolute inset-0 p-3 flex items-center justify-center gap-2 scale-75">
+                                {[1, 2, 3, 4].map((i) => (
+                                  <div key={i} className="flex flex-col items-center bg-white rounded-lg p-2 shadow-sm w-16">
+                                    <div className="w-8 h-8 bg-mint-pale rounded-full flex items-center justify-center text-xs">❤️</div>
+                                    <div className="h-2 w-12 bg-gray-200 rounded mt-1"></div>
+                                    <div className="h-1 w-10 bg-gray-100 rounded mt-1"></div>
+                                  </div>
+                                ))}
                               </div>
-                            </div>
+                            )}
+                            {component.id === 'hero' && (
+                              <div className="absolute inset-0 p-2 flex items-center">
+                                <div className="w-1/2 space-y-1">
+                                  <div className="h-1.5 w-16 bg-mint rounded"></div>
+                                  <div className="h-2 w-20 bg-primary-400 rounded"></div>
+                                  <div className="h-1 w-16 bg-gray-300 rounded"></div>
+                                  <div className="h-1 w-14 bg-gray-300 rounded"></div>
+                                  <div className="h-1.5 w-12 bg-primary-500 rounded-full mt-2"></div>
+                                </div>
+                                <div className="w-1/2 h-full bg-gradient-to-br from-primary-100 to-mint-pale rounded"></div>
+                              </div>
+                            )}
+                            {component.id === 'ceramicAdvantages' && (
+                              <div className="absolute inset-0 p-3 grid grid-cols-3 gap-1.5 scale-90">
+                                {[1, 2, 3, 4, 5, 6].map((i) => (
+                                  <div key={i} className="bg-white rounded p-1.5 text-center">
+                                    <div className="text-xl text-mint">{i}.</div>
+                                    <div className="h-1 w-full bg-gray-200 rounded mt-0.5"></div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {component.id === 'slider' && (
+                              <div className="absolute inset-0 p-3 flex gap-2">
+                                {[1, 2].map((i) => (
+                                  <div key={i} className="flex-1 bg-white rounded-lg p-2 shadow-sm">
+                                    <div className="h-1.5 w-12 bg-primary-400 rounded"></div>
+                                    <div className="h-1 w-full bg-gray-200 rounded mt-1"></div>
+                                    <div className="h-1 w-3/4 bg-gray-100 rounded mt-0.5"></div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {component.id === 'introText' && (
+                              <div className="absolute inset-0 p-4 flex items-center justify-center">
+                                <div className="space-y-1.5 w-full">
+                                  <div className="h-1 w-full bg-gray-300 rounded"></div>
+                                  <div className="h-1 w-full bg-gray-300 rounded"></div>
+                                  <div className="h-1 w-3/4 bg-gray-300 rounded"></div>
+                                  <div className="h-1 w-full bg-gray-300 rounded mt-2"></div>
+                                  <div className="h-1 w-5/6 bg-gray-300 rounded"></div>
+                                </div>
+                              </div>
+                            )}
+                            {component.id === 'sectionImage' && (
+                              <div className="absolute inset-0">
+                                <div className="h-1/2 bg-gradient-to-br from-gray-200 to-gray-300"></div>
+                                <div className="h-1/2 bg-white"></div>
+                              </div>
+                            )}
+                            {component.id === 'serviceBlock' && (
+                              <div className="absolute inset-0 p-2 flex items-center">
+                                <div className="w-1/2 space-y-1">
+                                  <div className="h-1.5 w-20 bg-primary-500 rounded"></div>
+                                  <div className="h-1 w-16 bg-gray-300 rounded"></div>
+                                  <div className="h-1.5 w-14 bg-primary-600 rounded-full mt-2"></div>
+                                </div>
+                                <div className="w-1/2 h-full bg-gradient-to-br from-mint-pale to-primary-100 rounded"></div>
+                              </div>
+                            )}
+                            {component.id === 'pioneeringWork' && (
+                              <div className="absolute inset-0 p-2 flex items-center">
+                                <div className="w-1/2 space-y-1">
+                                  <div className="h-1.5 w-16 bg-mint rounded"></div>
+                                  <div className="h-2 w-20 bg-primary-600 rounded"></div>
+                                  <div className="h-1 w-14 bg-gray-300 rounded"></div>
+                                </div>
+                                <div className="w-1/2 h-full bg-gradient-to-br from-primary-200 to-mint-100 rounded"></div>
+                              </div>
+                            )}
+                            {component.id === 'doctor' && (
+                              <div className="absolute inset-0 p-3 flex items-center gap-2">
+                                <div className="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center text-2xl">👨‍⚕️</div>
+                                <div className="flex-1 space-y-1">
+                                  <div className="h-1.5 w-16 bg-primary-500 rounded"></div>
+                                  <div className="h-1 w-20 bg-gray-300 rounded"></div>
+                                  <div className="flex gap-1 mt-1">
+                                    <div className="h-1 w-10 bg-mint-pale rounded-full"></div>
+                                    <div className="h-1 w-10 bg-mint-pale rounded-full"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                             {/* Preview Button */}
-                            <div className="absolute bottom-2 left-3 right-3">
+                            <div className="absolute bottom-2 left-3 right-3 z-10">
                               <div className={clsx(
                                 "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
                                 isSelected 

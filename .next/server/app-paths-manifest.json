@@ -1,5 +1,4 @@
 {
-  "/api/pages/route": "app/api/pages/route.js",
-  "/create-page/page": "app/create-page/page.js",
-  "/preview/components/page": "app/preview/components/page.js"
+  "/preview/components/page": "app/preview/components/page.js",
+  "/create-page/page": "app/create-page/page.js"
 }
