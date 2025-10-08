@@ -38,6 +38,7 @@ function mapInputToCreateData(input: CmsPageCreateInput): Prisma.PageCreateInput
         : input.templateData === null
         ? Prisma.JsonNull
         : (input.templateData as Prisma.InputJsonValue),
+    selectedComponents: input.selectedComponents ?? [],
     seoTitle: sanitizeOptional(input.seoTitle),
     seoDescription: sanitizeOptional(input.seoDescription),
   };
@@ -86,6 +87,9 @@ function mapInputToUpdateData(input: CmsPageUpdateInput): Prisma.PageUpdateInput
   }
   if (input.seoDescription !== undefined) {
     data.seoDescription = sanitizeNullable(input.seoDescription);
+  }
+  if (input.selectedComponents !== undefined) {
+    data.selectedComponents = input.selectedComponents ?? [];
   }
 
   return data;

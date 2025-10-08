@@ -18,19 +18,20 @@ enum CmsPageTemplate {
 }
 
 model Page {
-  id             String         @id @default(uuid())
-  slug           String         @unique
-  title          String
-  excerpt        String?
-  heroTitle      String?
-  heroSubtitle   String?
-  heroImage      String?
-  content        String
-  status         CmsPageStatus  @default(draft)
-  template       CmsPageTemplate @default(default)
-  templateData   Json?
-  seoTitle       String?
-  seoDescription String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id                String         @id @default(uuid())
+  slug              String         @unique
+  title             String
+  excerpt           String?
+  heroTitle         String?
+  heroSubtitle      String?
+  heroImage         String?
+  content           String
+  status            CmsPageStatus  @default(draft)
+  template          CmsPageTemplate @default(default)
+  templateData      Json?
+  selectedComponents String[]      @default([])
+  seoTitle          String?
+  seoDescription    String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 }

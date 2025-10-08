@@ -23,6 +23,7 @@ const pageSchema = z.object({
   status: z.enum(["draft", "published"]).default("draft"),
   template: z.enum(["default", "benefits_for_patients"]).default("default"),
   templateData: z.any().optional(),
+  selectedComponents: z.array(z.string()).optional().default([]),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
 });
@@ -50,10 +51,20 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log('📝 POST /api/pages - Request body:', JSON.stringify(body, null, 2));
+    console.log('📝 selectedComponents in body:', body.selectedComponents);
+    
     const parsed = pageSchema.parse(body);
+    console.log('✅ Parsed data:', JSON.stringify(parsed, null, 2));
+    console.log('✅ selectedComponents after parse:', parsed.selectedComponents);
+    
     const page = await createPage(parsed);
+    console.log('💾 Created page:', JSON.stringify(page, null, 2));
+    console.log('💾 selectedComponents in created page:', page.selectedComponents);
+    
     return NextResponse.json({ page }, { status: 201 });
   } catch (error) {
+    console.error('❌ Error in POST /api/pages:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { message: "Validation failed", issues: error.flatten() },

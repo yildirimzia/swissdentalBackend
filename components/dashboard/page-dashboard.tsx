@@ -30,11 +30,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Dialog } from "@/components/ui/dialog";
 import type { CmsPage } from "@/lib/types/page";
 import {
   TEMPLATE_OPTIONS,
   TEMPLATE_LABEL_MAP,
+  BENEFITS_COMPONENTS,
   type TemplateOptionId,
+  type BenefitsComponentType,
 } from "@/components/dashboard/templates";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -393,6 +396,7 @@ const formSchema = z.object({
   status: z.enum(["draft", "published"]).default("draft"),
   template: z.enum(["default", "benefits_for_patients"]).default("default"),
   benefitsTemplate: benefitsTemplateSchema.optional(),
+  selectedComponents: z.array(z.string()).optional(), // Seçilen bileşenler
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
 });
@@ -417,6 +421,7 @@ const createDefaultValues = (template: TemplateOptionId = "default"): FormSchema
     status: "draft",
     template,
     benefitsTemplate: deepClone(BENEFITS_TEMPLATE_DEFAULT),
+    selectedComponents: [],
     seoTitle: "",
     seoDescription: "",
   };
@@ -426,9 +431,13 @@ const createDefaultValues = (template: TemplateOptionId = "default"): FormSchema
 function BenefitsTemplateEditor({
   form,
   arrays,
+  selectedComponents,
+  onOpenDialog,
 }: {
   form: ReturnType<typeof useForm<FormSchema>>;
   arrays: BenefitsArrayControls;
+  selectedComponents: Set<BenefitsComponentType>;
+  onOpenDialog: () => void;
 }) {
   const benefitsTemplate = form.watch("benefitsTemplate");
 
@@ -439,378 +448,411 @@ function BenefitsTemplateEditor({
   return (
     <Card className="space-y-8 p-6 border-2 border-primary-100">
       <header className="space-y-2 pb-4 border-b border-primary-100">
-        <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
-          🏥 Hasta faydaları şablonu
-        </h3>
-        <p className="text-sm text-gray-600 leading-relaxed">
-          Aşağıdaki alanlar seçtiğiniz şablonun bileşenlerini doldurur. Tüm girdiler yayınlandığında doğrudan frontend'e aktarılır.
-        </p>
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
+              🏥 Şablon Bileşenleri
+            </h3>
+            <p className="text-sm text-gray-600 leading-relaxed mt-2">
+              Seçtiğiniz bileşenlerin içeriklerini aşağıdan düzenleyin. 
+              {selectedComponents.size === 0 && " Bileşen eklemek için yukarıdaki '+ Şablon' butonunu kullanın."}
+            </p>
+          </div>
+        </div>
       </header>
 
-      <section className="space-y-4 p-5 rounded-2xl bg-gradient-to-br from-mint-pale/30 to-white border border-primary-100">
-        <h4 className="text-sm font-bold text-primary-700 flex items-center gap-2 pb-2 border-b border-primary-100">
-          🎯 Hero Alanı
-        </h4>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="hero-eyebrow">Üst etiket</Label>
-            <Input id="hero-eyebrow" {...form.register("benefitsTemplate.hero.eyebrow")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="hero-button-label">Buton metni</Label>
-            <Input id="hero-button-label" {...form.register("benefitsTemplate.hero.buttonLabel")} />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="hero-title">Başlık</Label>
-            <Input id="hero-title" {...form.register("benefitsTemplate.hero.title")} />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="hero-description">Açıklama</Label>
-            <Textarea id="hero-description" rows={3} {...form.register("benefitsTemplate.hero.description")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="hero-button-target">Buton hedefi (anchor)</Label>
-            <Input id="hero-button-target" {...form.register("benefitsTemplate.hero.buttonTarget")} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="hero-image-url">Görsel URL</Label>
-            <Input id="hero-image-url" {...form.register("benefitsTemplate.hero.imageUrl")} />
-          </div>
+      {selectedComponents.size === 0 && (
+        <div className="rounded-2xl border-2 border-dashed border-primary-300 bg-gradient-to-br from-primary-50 via-mint-pale/30 to-white p-10 text-center shadow-soft">
+          <div className="text-4xl mb-3">🎨</div>
+          <p className="text-sm text-primary-800 font-semibold mb-1">Henüz bileşen eklenmemiş</p>
+          <p className="text-xs text-primary-600">
+            Yukarıdaki "+ Şablon" butonuna tıklayarak sayfanıza bileşenler ekleyin.
+          </p>
         </div>
-      </section>
+      )}
 
-      <section className="space-y-4">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h4 className="text-sm font-semibold text-primary-700">Neden seramik kartları</h4>
-            <p className="text-xs text-gray-500">Kart ekleyip kaldırabilir ve ikon / bağlantı bilgilerini düzenleyebilirsiniz.</p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={() =>
-              arrays.whyCeramicItems.append({
-                icon: "",
-                title: "",
-                desc: "",
-                href: "",
-                ctaLabel: "",
-              })
-            }
-          >
-            <PlusIcon className="h-4 w-4" /> Kart ekle
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          {arrays.whyCeramicItems.fields.map((field, index) => (
-            <div key={field.id} className="group rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50/50 p-5 shadow-sm hover:border-primary-300 hover:shadow-medium transition-all duration-300 space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                <p className="text-sm font-bold text-primary-700 flex items-center gap-2">
-                  📋 Kart #{index + 1}
-                </p>
-                {arrays.whyCeramicItems.fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-error-600 hover:text-error-700"
-                    onClick={() => arrays.whyCeramicItems.remove(index)}
-                  >
-                    <MinusIcon className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Başlık</Label>
-                  <Input {...form.register(`benefitsTemplate.whyCeramic.items.${index}.title`)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>İkon URL</Label>
-                  <Input {...form.register(`benefitsTemplate.whyCeramic.items.${index}.icon`)} />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Açıklama</Label>
-                  <Textarea rows={2} {...form.register(`benefitsTemplate.whyCeramic.items.${index}.desc`)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Bağlantı</Label>
-                  <Input {...form.register(`benefitsTemplate.whyCeramic.items.${index}.href`)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Buton metni</Label>
-                  <Input {...form.register(`benefitsTemplate.whyCeramic.items.${index}.ctaLabel`)} />
-                </div>
-              </div>
+      {selectedComponents.has("hero") && (
+        <section className="space-y-4 p-5 rounded-2xl bg-gradient-to-br from-mint-pale/30 to-white border border-primary-100">
+          <h4 className="text-sm font-bold text-primary-700 flex items-center gap-2 pb-2 border-b border-primary-100">
+            🎯 Hero Alanı
+          </h4>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="hero-eyebrow">Üst etiket</Label>
+              <Input id="hero-eyebrow" {...form.register("benefitsTemplate.hero.eyebrow")} />
             </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h4 className="text-sm font-semibold text-primary-700">Giriş paragrafı</h4>
-        <Textarea rows={4} {...form.register("benefitsTemplate.introText.text")} />
-      </section>
-
-      <section className="space-y-4">
-        <h4 className="text-sm font-semibold text-primary-700">Arka plan görseli</h4>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Görsel URL</Label>
-            <Input {...form.register("benefitsTemplate.sectionImage.imageUrl")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Alternatif metin</Label>
-            <Input {...form.register("benefitsTemplate.sectionImage.alt")} />
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h4 className="text-sm font-semibold text-primary-700">Seramik avantajları</h4>
-            <p className="text-xs text-gray-500">Başlık ve kartları düzenleyin.</p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={() =>
-              arrays.ceramicCards.append({ no: `${arrays.ceramicCards.fields.length + 1}.`, title: "", subtitle: "", desc: "" })
-            }
-          >
-            <PlusIcon className="h-4 w-4" /> Kart ekle
-          </Button>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Eyebrow</Label>
-            <Input {...form.register("benefitsTemplate.ceramicAdvantages.eyebrow")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Vurgulu metin</Label>
-            <Input {...form.register("benefitsTemplate.ceramicAdvantages.highlight")} />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>Başlık</Label>
-            <Input {...form.register("benefitsTemplate.ceramicAdvantages.title")} />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>Açıklama</Label>
-            <Textarea rows={3} {...form.register("benefitsTemplate.ceramicAdvantages.intro")} />
-          </div>
-        </div>
-        <div className="space-y-4">
-          {arrays.ceramicCards.fields.map((field, index) => (
-            <div key={field.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-inner-soft space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-primary-700">Kart #{index + 1}</p>
-                {arrays.ceramicCards.fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-error-600 hover:text-error-700"
-                    onClick={() => arrays.ceramicCards.remove(index)}
-                  >
-                    <MinusIcon className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Numara</Label>
-                  <Input {...form.register(`benefitsTemplate.ceramicAdvantages.cards.${index}.no`)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Başlık</Label>
-                  <Input {...form.register(`benefitsTemplate.ceramicAdvantages.cards.${index}.title`)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Alt başlık</Label>
-                  <Input {...form.register(`benefitsTemplate.ceramicAdvantages.cards.${index}.subtitle`)} />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Açıklama</Label>
-                  <Textarea rows={2} {...form.register(`benefitsTemplate.ceramicAdvantages.cards.${index}.desc`)} />
-                </div>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="hero-button-label">Buton metni</Label>
+              <Input id="hero-button-label" {...form.register("benefitsTemplate.hero.buttonLabel")} />
             </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h4 className="text-sm font-semibold text-primary-700">Hizmet bloğu</h4>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Eyebrow</Label>
-            <Input {...form.register("benefitsTemplate.serviceBlock.eyebrow")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Başlık</Label>
-            <Input {...form.register("benefitsTemplate.serviceBlock.title")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Alt başlık</Label>
-            <Input {...form.register("benefitsTemplate.serviceBlock.subtitle")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Görsel URL</Label>
-            <Input {...form.register("benefitsTemplate.serviceBlock.imageUrl")} />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>Açıklama</Label>
-            <Textarea rows={3} {...form.register("benefitsTemplate.serviceBlock.description")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Buton metni</Label>
-            <Input {...form.register("benefitsTemplate.serviceBlock.ctaLabel")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Buton bağlantısı</Label>
-            <Input {...form.register("benefitsTemplate.serviceBlock.ctaHref")} />
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h4 className="text-sm font-semibold text-primary-700">Referans slider</h4>
-            <p className="text-xs text-gray-500">Hastaların deneyimlerini buradan düzenleyin.</p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={() =>
-              arrays.testimonials.append({
-                imgSrc: "",
-                name: "",
-                country: "",
-                quote: "",
-                cta: "",
-                href: "",
-              })
-            }
-          >
-            <PlusIcon className="h-4 w-4" /> Referans ekle
-          </Button>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Eyebrow</Label>
-            <Input {...form.register("benefitsTemplate.slider.eyebrow")} />
-          </div>
-          {arrays.testimonials.fields.map((field, index) => (
-            <div key={field.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-inner-soft space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-primary-700">Referans #{index + 1}</p>
-                {arrays.testimonials.fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-error-600 hover:text-error-700"
-                    onClick={() => arrays.testimonials.remove(index)}
-                  >
-                    <MinusIcon className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>İsim</Label>
-                  <Input {...form.register(`benefitsTemplate.slider.testimonials.${index}.name`)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Ülke</Label>
-                  <Input {...form.register(`benefitsTemplate.slider.testimonials.${index}.country`)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Görsel URL</Label>
-                  <Input {...form.register(`benefitsTemplate.slider.testimonials.${index}.imgSrc`)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Buton metni</Label>
-                  <Input {...form.register(`benefitsTemplate.slider.testimonials.${index}.cta`)} />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Alıntı</Label>
-                  <Textarea rows={2} {...form.register(`benefitsTemplate.slider.testimonials.${index}.quote`)} />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Bağlantı</Label>
-                  <Input {...form.register(`benefitsTemplate.slider.testimonials.${index}.href`)} />
-                </div>
-              </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="hero-title">Başlık</Label>
+              <Input id="hero-title" {...form.register("benefitsTemplate.hero.title")} />
             </div>
-          ))}
-        </div>
-      </section>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="hero-description">Açıklama</Label>
+              <Textarea id="hero-description" rows={3} {...form.register("benefitsTemplate.hero.description")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hero-button-target">Buton hedefi (anchor)</Label>
+              <Input id="hero-button-target" {...form.register("benefitsTemplate.hero.buttonTarget")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hero-image-url">Görsel URL</Label>
+              <Input id="hero-image-url" {...form.register("benefitsTemplate.hero.imageUrl")} />
+            </div>
+          </div>
+        </section>
+      )}
 
-      <section className="space-y-4">
-        <h4 className="text-sm font-semibold text-primary-700">Öncü çalışma</h4>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Eyebrow</Label>
-            <Input {...form.register("benefitsTemplate.pioneeringWork.eyebrow")} />
+      {selectedComponents.has("whyCeramic") && (
+        <section className="space-y-4">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h4 className="text-sm font-semibold text-primary-700">Neden seramik kartları</h4>
+              <p className="text-xs text-gray-500">Kart ekleyip kaldırabilir ve ikon / bağlantı bilgilerini düzenleyebilirsiniz.</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                arrays.whyCeramicItems.append({
+                  icon: "",
+                  title: "",
+                  desc: "",
+                  href: "",
+                  ctaLabel: "",
+                })
+              }
+            >
+              <PlusIcon className="h-4 w-4" /> Kart ekle
+            </Button>
           </div>
-          <div className="space-y-2">
-            <Label>Başlık</Label>
-            <Input {...form.register("benefitsTemplate.pioneeringWork.title")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Alt başlık</Label>
-            <Input {...form.register("benefitsTemplate.pioneeringWork.subtitle")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Görsel URL</Label>
-            <Input {...form.register("benefitsTemplate.pioneeringWork.imageUrl")} />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>Açıklama</Label>
-            <Textarea rows={3} {...form.register("benefitsTemplate.pioneeringWork.description")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Buton metni</Label>
-            <Input {...form.register("benefitsTemplate.pioneeringWork.ctaLabel")} />
-          </div>
-          <div className="space-y-2">
-            <Label>Buton bağlantısı</Label>
-            <Input {...form.register("benefitsTemplate.pioneeringWork.ctaHref")} />
-          </div>
-        </div>
-      </section>
 
-      <section className="space-y-4">
-        <h4 className="text-sm font-semibold text-primary-700">Doktor bilgisi</h4>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label>İsim</Label>
-            <Input {...form.register("benefitsTemplate.doctor.name")} />
+          <div className="space-y-4">
+            {arrays.whyCeramicItems.fields.map((field, index) => (
+              <div key={field.id} className="group rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50/50 p-5 shadow-sm hover:border-primary-300 hover:shadow-medium transition-all duration-300 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                  <p className="text-sm font-bold text-primary-700 flex items-center gap-2">
+                    📋 Kart #{index + 1}
+                  </p>
+                  {arrays.whyCeramicItems.fields.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-error-600 hover:text-error-700"
+                      onClick={() => arrays.whyCeramicItems.remove(index)}
+                    >
+                      <MinusIcon className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Başlık</Label>
+                    <Input {...form.register(`benefitsTemplate.whyCeramic.items.${index}.title`)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>İkon URL</Label>
+                    <Input {...form.register(`benefitsTemplate.whyCeramic.items.${index}.icon`)} />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Açıklama</Label>
+                    <Textarea rows={2} {...form.register(`benefitsTemplate.whyCeramic.items.${index}.desc`)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Bağlantı</Label>
+                    <Input {...form.register(`benefitsTemplate.whyCeramic.items.${index}.href`)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Buton metni</Label>
+                    <Input {...form.register(`benefitsTemplate.whyCeramic.items.${index}.ctaLabel`)} />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="space-y-2">
-            <Label>Unvan</Label>
-            <Input {...form.register("benefitsTemplate.doctor.title")} />
+        </section>
+      )}
+
+      {selectedComponents.has("introText") && (
+        <section className="space-y-4">
+          <h4 className="text-sm font-semibold text-primary-700">Giriş paragrafı</h4>
+          <Textarea rows={4} {...form.register("benefitsTemplate.introText.text")} />
+        </section>
+      )}
+
+      {selectedComponents.has("sectionImage") && (
+        <section className="space-y-4">
+          <h4 className="text-sm font-semibold text-primary-700">Arka plan görseli</h4>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Görsel URL</Label>
+              <Input {...form.register("benefitsTemplate.sectionImage.imageUrl")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Alternatif metin</Label>
+              <Input {...form.register("benefitsTemplate.sectionImage.alt")} />
+            </div>
           </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>Açıklama</Label>
-            <Textarea rows={3} {...form.register("benefitsTemplate.doctor.description")} />
+        </section>
+      )}
+
+      {selectedComponents.has("ceramicAdvantages") && (
+        <section className="space-y-4">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h4 className="text-sm font-semibold text-primary-700">Seramik avantajları</h4>
+              <p className="text-xs text-gray-500">Başlık ve kartları düzenleyin.</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                arrays.ceramicCards.append({ no: `${arrays.ceramicCards.fields.length + 1}.`, title: "", subtitle: "", desc: "" })
+              }
+            >
+              <PlusIcon className="h-4 w-4" /> Kart ekle
+            </Button>
           </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>Görsel URL</Label>
-            <Input {...form.register("benefitsTemplate.doctor.imageUrl")} />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Eyebrow</Label>
+              <Input {...form.register("benefitsTemplate.ceramicAdvantages.eyebrow")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Vurgulu metin</Label>
+              <Input {...form.register("benefitsTemplate.ceramicAdvantages.highlight")} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Başlık</Label>
+              <Input {...form.register("benefitsTemplate.ceramicAdvantages.title")} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Açıklama</Label>
+              <Textarea rows={3} {...form.register("benefitsTemplate.ceramicAdvantages.intro")} />
+            </div>
           </div>
-        </div>
-      </section>
+          <div className="space-y-4">
+            {arrays.ceramicCards.fields.map((field, index) => (
+              <div key={field.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-inner-soft space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-primary-700">Kart #{index + 1}</p>
+                  {arrays.ceramicCards.fields.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-error-600 hover:text-error-700"
+                      onClick={() => arrays.ceramicCards.remove(index)}
+                    >
+                      <MinusIcon className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Numara</Label>
+                    <Input {...form.register(`benefitsTemplate.ceramicAdvantages.cards.${index}.no`)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Başlık</Label>
+                    <Input {...form.register(`benefitsTemplate.ceramicAdvantages.cards.${index}.title`)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Alt başlık</Label>
+                    <Input {...form.register(`benefitsTemplate.ceramicAdvantages.cards.${index}.subtitle`)} />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Açıklama</Label>
+                    <Textarea rows={2} {...form.register(`benefitsTemplate.ceramicAdvantages.cards.${index}.desc`)} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {selectedComponents.has("serviceBlock") && (
+        <section className="space-y-4">
+          <h4 className="text-sm font-semibold text-primary-700">Hizmet bloğu</h4>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Eyebrow</Label>
+              <Input {...form.register("benefitsTemplate.serviceBlock.eyebrow")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Başlık</Label>
+              <Input {...form.register("benefitsTemplate.serviceBlock.title")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Alt başlık</Label>
+              <Input {...form.register("benefitsTemplate.serviceBlock.subtitle")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Görsel URL</Label>
+              <Input {...form.register("benefitsTemplate.serviceBlock.imageUrl")} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Açıklama</Label>
+              <Textarea rows={3} {...form.register("benefitsTemplate.serviceBlock.description")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Buton metni</Label>
+              <Input {...form.register("benefitsTemplate.serviceBlock.ctaLabel")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Buton bağlantısı</Label>
+              <Input {...form.register("benefitsTemplate.serviceBlock.ctaHref")} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {selectedComponents.has("slider") && (
+        <section className="space-y-4">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h4 className="text-sm font-semibold text-primary-700">Referans slider</h4>
+              <p className="text-xs text-gray-500">Hastaların deneyimlerini buradan düzenleyin.</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                arrays.testimonials.append({
+                  imgSrc: "",
+                  name: "",
+                  country: "",
+                  quote: "",
+                  cta: "",
+                  href: "",
+                })
+              }
+            >
+              <PlusIcon className="h-4 w-4" /> Referans ekle
+            </Button>
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Eyebrow</Label>
+              <Input {...form.register("benefitsTemplate.slider.eyebrow")} />
+            </div>
+            {arrays.testimonials.fields.map((field, index) => (
+              <div key={field.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-inner-soft space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-primary-700">Referans #{index + 1}</p>
+                  {arrays.testimonials.fields.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-error-600 hover:text-error-700"
+                      onClick={() => arrays.testimonials.remove(index)}
+                    >
+                      <MinusIcon className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>İsim</Label>
+                    <Input {...form.register(`benefitsTemplate.slider.testimonials.${index}.name`)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Ülke</Label>
+                    <Input {...form.register(`benefitsTemplate.slider.testimonials.${index}.country`)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Görsel URL</Label>
+                    <Input {...form.register(`benefitsTemplate.slider.testimonials.${index}.imgSrc`)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Buton metni</Label>
+                    <Input {...form.register(`benefitsTemplate.slider.testimonials.${index}.cta`)} />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Alıntı</Label>
+                    <Textarea rows={2} {...form.register(`benefitsTemplate.slider.testimonials.${index}.quote`)} />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Bağlantı</Label>
+                    <Input {...form.register(`benefitsTemplate.slider.testimonials.${index}.href`)} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {selectedComponents.has("pioneeringWork") && (
+        <section className="space-y-4">
+          <h4 className="text-sm font-semibold text-primary-700">Öncü çalışma</h4>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Eyebrow</Label>
+              <Input {...form.register("benefitsTemplate.pioneeringWork.eyebrow")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Başlık</Label>
+              <Input {...form.register("benefitsTemplate.pioneeringWork.title")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Alt başlık</Label>
+              <Input {...form.register("benefitsTemplate.pioneeringWork.subtitle")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Görsel URL</Label>
+              <Input {...form.register("benefitsTemplate.pioneeringWork.imageUrl")} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Açıklama</Label>
+              <Textarea rows={3} {...form.register("benefitsTemplate.pioneeringWork.description")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Buton metni</Label>
+              <Input {...form.register("benefitsTemplate.pioneeringWork.ctaLabel")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Buton bağlantısı</Label>
+              <Input {...form.register("benefitsTemplate.pioneeringWork.ctaHref")} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {selectedComponents.has("doctor") && (
+        <section className="space-y-4">
+          <h4 className="text-sm font-semibold text-primary-700">Doktor bilgisi</h4>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>İsim</Label>
+              <Input {...form.register("benefitsTemplate.doctor.name")} />
+            </div>
+            <div className="space-y-2">
+              <Label>Unvan</Label>
+              <Input {...form.register("benefitsTemplate.doctor.title")} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Açıklama</Label>
+              <Textarea rows={3} {...form.register("benefitsTemplate.doctor.description")} />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Görsel URL</Label>
+              <Input {...form.register("benefitsTemplate.doctor.imageUrl")} />
+            </div>
+          </div>
+        </section>
+      )}
     </Card>
   );
 }
@@ -823,6 +865,9 @@ export default function PageDashboard() {
   const [message, setMessage] = useState<string | null>(null);
   const [statusState, setStatusState] = useState<DashboardState>("idle");
   const [isPending, startTransition] = useTransition();
+  const [isComponentDialogOpen, setIsComponentDialogOpen] = useState(false);
+  const [selectedComponents, setSelectedComponents] = useState<Set<BenefitsComponentType>>(new Set());
+  const [selectedTemplateInDialog, setSelectedTemplateInDialog] = useState<TemplateOptionId>("benefits_for_patients");
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -863,6 +908,8 @@ export default function PageDashboard() {
   useEffect(() => {
     if (selectedPage) {
       const template = selectedPage.template ?? "default";
+      const savedComponents = (selectedPage as any).selectedComponents || [];
+      
       form.reset({
         slug: selectedPage.slug,
         title: selectedPage.title,
@@ -877,11 +924,16 @@ export default function PageDashboard() {
           template === "benefits_for_patients"
             ? mergeBenefitsTemplateData(selectedPage.templateData as Partial<BenefitsTemplateData> | null)
             : deepClone(BENEFITS_TEMPLATE_DEFAULT),
+        selectedComponents: savedComponents,
         seoTitle: selectedPage.seoTitle ?? "",
         seoDescription: selectedPage.seoDescription ?? "",
       });
+      
+      // Seçili componentleri state'e yükle
+      setSelectedComponents(new Set(savedComponents));
     } else {
       resetForm();
+      setSelectedComponents(new Set());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPage]);
@@ -899,11 +951,47 @@ export default function PageDashboard() {
     form.setValue("template", template);
     if (template === "benefits_for_patients") {
       form.setValue("benefitsTemplate", deepClone(BENEFITS_TEMPLATE_DEFAULT));
+      setSelectedComponents(new Set()); // Yeni şablon seçildiğinde component seçimini sıfırla
     }
+  };
+
+  const toggleComponent = (componentId: BenefitsComponentType) => {
+    setSelectedComponents((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(componentId)) {
+        newSet.delete(componentId);
+      } else {
+        newSet.add(componentId);
+      }
+      return newSet;
+    });
+  };
+
+  const openComponentDialog = () => {
+    setSelectedTemplateInDialog(currentTemplate === "default" ? "benefits_for_patients" : currentTemplate);
+    setIsComponentDialogOpen(true);
+  };
+
+  const closeComponentDialog = () => {
+    setIsComponentDialogOpen(false);
+  };
+
+  const applyTemplateSelection = () => {
+    console.log('🎨 Applying template...');
+    console.log('🎨 Selected components:', Array.from(selectedComponents));
+    // Şablonu uygula
+    handleTemplateChange(selectedTemplateInDialog);
+    // Seçilen componentleri kaydet
+    form.setValue("selectedComponents", Array.from(selectedComponents));
+    console.log('🎨 Form value after setValue:', form.getValues('selectedComponents'));
+    closeComponentDialog();
   };
 
   const handleSubmit = form.handleSubmit((values) => {
     resetFeedback();
+    console.log('🎯 Form values:', values);
+    console.log('🎯 selectedComponents from form:', values.selectedComponents);
+    
     const method = selectedPage ? "PUT" : "POST";
     const url = selectedPage ? `/api/pages/${selectedPage.slug}` : "/api/pages";
 
@@ -928,9 +1016,14 @@ export default function PageDashboard() {
         return;
       }
       payload.templateData = mergeBenefitsTemplateData(values.benefitsTemplate);
+      payload.selectedComponents = values.selectedComponents || []; // Seçilen bileşenleri kaydet
+      console.log('✅ Payload selectedComponents:', payload.selectedComponents);
     } else {
       payload.templateData = null;
+      payload.selectedComponents = [];
     }
+
+    console.log('📤 Sending payload to API:', JSON.stringify(payload, null, 2));
 
     startTransition(async () => {
       const response = await fetch(url, {
@@ -1173,7 +1266,7 @@ export default function PageDashboard() {
                   <section className="space-y-4 rounded-2xl border-2 border-gray-100 bg-gradient-to-br from-white to-primary-50/20 shadow-sm p-4 md:p-6 transition-all duration-300 hover:border-primary-200 hover:shadow-medium">
                     <header className="space-y-1 pb-3 border-b border-gray-100">
                       <h4 className="text-sm font-bold text-primary-700 flex items-center gap-2">
-                        🔍 SEO & yayın
+                        🔍 SEO & Şablon
                       </h4>
                       <p className="text-xs text-gray-600 leading-relaxed">
                         Şablon seçimi tasarımı belirler. Yayın durumu "Yayında" olduğunda frontend'de görünür.
@@ -1194,21 +1287,32 @@ export default function PageDashboard() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="template">Sayfa şablonu</Label>
-                        <div className="relative">
-                          <select
-                            id="template"
-                            value={currentTemplate}
-                            onChange={(event) => handleTemplateChange(event.target.value as TemplateOptionId)}
-                            className="h-11 w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 text-sm text-charcoal shadow-inner-soft focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
+                        <Label>Sayfa şablonu</Label>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-charcoal">
+                                  {TEMPLATE_LABEL_MAP[currentTemplate]}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                  {TEMPLATE_OPTIONS.find(t => t.id === currentTemplate)?.description}
+                                </p>
+                              </div>
+                              {currentTemplate !== "default" && (
+                                <Badge tone="success">Aktif</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={openComponentDialog}
+                            className="gap-2 shrink-0"
+                            size="sm"
                           >
-                            {TEMPLATE_OPTIONS.map((option) => (
-                              <option key={option.id} value={option.id}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">▾</span>
+                            <PlusIcon className="h-5 w-5" />
+                            Şablon
+                          </Button>
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -1230,7 +1334,12 @@ export default function PageDashboard() {
                   </section>
 
                   {currentTemplate === "benefits_for_patients" && (
-                    <BenefitsTemplateEditor form={form} arrays={arrays} />
+                    <BenefitsTemplateEditor 
+                      form={form} 
+                      arrays={arrays} 
+                      selectedComponents={selectedComponents}
+                      onOpenDialog={openComponentDialog}
+                    />
                   )}
 
                   <div className="flex flex-col md:flex-row items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-primary-50 to-mint-pale/50 border border-primary-200/50 p-5 shadow-soft">
@@ -1263,6 +1372,227 @@ export default function PageDashboard() {
             </Card>
           </div>
         </div>
+
+        {/* Template & Component Selection Dialog */}
+        <Dialog
+          open={isComponentDialogOpen}
+          onClose={closeComponentDialog}
+          title="Şablon ve Bileşen Seçimi"
+          description="Sol menüden şablon seçin, ardından sağ taraftan eklemek istediğiniz bileşenleri işaretleyin."
+          size="full"
+        >
+          <div className="grid gap-6 lg:grid-cols-[280px_1fr] min-h-[600px]">
+            {/* Sol Menü - Şablon Listesi */}
+            <div className="space-y-2 rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-4">
+              <h3 className="text-sm font-bold text-charcoal mb-4 px-2">📑 Şablonlar</h3>
+              <div className="space-y-1">
+                {TEMPLATE_OPTIONS.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => setSelectedTemplateInDialog(template.id)}
+                    className={clsx(
+                      "w-full rounded-xl px-4 py-3 text-left transition-all duration-200",
+                      selectedTemplateInDialog === template.id
+                        ? "bg-gradient-to-r from-primary-500 to-mint text-white shadow-medium"
+                        : "hover:bg-gray-100 text-charcoal"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={clsx(
+                        "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+                        selectedTemplateInDialog === template.id
+                          ? "bg-white/20"
+                          : "bg-primary-50"
+                      )}>
+                        {template.id === "default" ? "📄" : "🏥"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={clsx(
+                          "text-sm font-semibold truncate",
+                          selectedTemplateInDialog === template.id
+                            ? "text-white"
+                            : "text-charcoal"
+                        )}>
+                          {template.label}
+                        </p>
+                        <p className={clsx(
+                          "text-xs truncate",
+                          selectedTemplateInDialog === template.id
+                            ? "text-white/80"
+                            : "text-gray-500"
+                        )}>
+                          {template.description}
+                        </p>
+                      </div>
+                      {selectedTemplateInDialog === template.id && (
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white">
+                          <svg className="h-3 w-3 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sağ Taraf - Bileşen Seçimi */}
+            <div className="space-y-6">
+              {selectedTemplateInDialog === "default" ? (
+                <div className="flex items-center justify-center min-h-[400px] rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50/50">
+                  <div className="text-center px-6">
+                    <div className="text-6xl mb-4">📝</div>
+                    <h3 className="text-lg font-bold text-charcoal mb-2">Serbest İçerik Sayfası</h3>
+                    <p className="text-sm text-gray-600 max-w-md">
+                      Bu şablon özel bileşenler içermez. Sayfa içeriğini ana form alanlarından düzenleyebilirsiniz.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-charcoal">Bileşenleri Seçin</h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Sayfanıza eklemek istediğiniz bileşenleri işaretleyin
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge tone="success">
+                        {selectedComponents.size} seçili
+                      </Badge>
+                      {selectedComponents.size > 0 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedComponents(new Set())}
+                          className="text-error-600"
+                        >
+                          Tümünü Temizle
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {BENEFITS_COMPONENTS.map((component) => {
+                      const isSelected = selectedComponents.has(component.id);
+                      return (
+                        <div
+                          key={component.id}
+                          className={clsx(
+                            "group relative overflow-hidden rounded-2xl border-2 transition-all duration-300",
+                            isSelected
+                              ? "border-primary-500 bg-gradient-to-br from-primary-50 to-mint-pale/30 shadow-dental scale-102"
+                              : "border-gray-200 bg-white hover:border-primary-300 hover:shadow-medium hover:scale-101"
+                          )}
+                        >
+                          <div className="absolute top-3 right-3 z-10">
+                            {isSelected && (
+                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-500 shadow-medium">
+                                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Component Preview Area - Clickable */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (component.previewUrl) {
+                                window.open(component.previewUrl, '_blank', 'noopener,noreferrer');
+                              }
+                            }}
+                            className={clsx(
+                              "relative h-32 w-full border-b-2 transition-all cursor-pointer",
+                              isSelected ? "border-primary-200 bg-gradient-to-br from-white to-primary-50/50" : "border-gray-100 bg-gradient-to-br from-gray-50 to-white hover:from-primary-50/30 hover:to-primary-100/30"
+                            )}
+                          >
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className={clsx(
+                                "flex h-20 w-20 items-center justify-center rounded-2xl text-5xl transition-all",
+                                isSelected 
+                                  ? "bg-white shadow-soft scale-110" 
+                                  : "bg-gradient-to-br from-primary-50 to-mint-pale/50 group-hover:scale-105"
+                              )}>
+                                {component.icon}
+                              </div>
+                            </div>
+                            {/* Preview Button */}
+                            <div className="absolute bottom-2 left-3 right-3">
+                              <div className={clsx(
+                                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
+                                isSelected 
+                                  ? "bg-primary-500 text-white hover:bg-primary-600" 
+                                  : "bg-white/80 text-gray-600 hover:bg-primary-500 hover:text-white"
+                              )}>
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Önizleme
+                              </div>
+                            </div>
+                          </button>
+
+                          {/* Component Info - Clickable for selection */}
+                          <button
+                            type="button"
+                            onClick={() => toggleComponent(component.id)}
+                            className="w-full p-4 text-left"
+                          >
+                            <h4 className={clsx(
+                              "text-base font-bold mb-2 transition-colors",
+                              isSelected ? "text-primary-700" : "text-charcoal group-hover:text-primary-700"
+                            )}>
+                              {component.label}
+                            </h4>
+                            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                              {component.description}
+                            </p>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-6">
+            <div className="flex items-center gap-4">
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold text-charcoal">Seçili Şablon:</span>{" "}
+                <span className="text-primary-700 font-medium">
+                  {TEMPLATE_LABEL_MAP[selectedTemplateInDialog]}
+                </span>
+              </p>
+              {selectedTemplateInDialog !== "default" && (
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold text-primary-700">{selectedComponents.size}</span> bileşen seçildi
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="ghost" onClick={closeComponentDialog}>
+                İptal
+              </Button>
+              <Button onClick={applyTemplateSelection} className="gap-2">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Şablonu Uygula
+              </Button>
+            </div>
+          </div>
+        </Dialog>
       </div>
     );
   }

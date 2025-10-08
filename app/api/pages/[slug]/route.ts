@@ -24,6 +24,7 @@ const updateSchema = z
     status: z.enum(["draft", "published"]).optional(),
     template: z.enum(["default", "benefits_for_patients"]).optional(),
     templateData: z.any().optional(),
+    selectedComponents: z.array(z.string()).optional(),
     seoTitle: z.string().optional(),
     seoDescription: z.string().optional(),
   })

@@ -20,6 +20,7 @@ export interface CmsPageCreateInput {
   status?: CmsPageStatus;
   template?: CmsPageTemplate;
   templateData?: Prisma.JsonValue;
+  selectedComponents?: string[];
   seoTitle?: string;
   seoDescription?: string;
 }
@@ -33,4 +34,5 @@ export type CmsPageUpdateInput = Partial<
   status?: CmsPageStatus;
   template?: CmsPageTemplate;
   templateData?: Prisma.JsonValue;
+  selectedComponents?: string[];
 };
