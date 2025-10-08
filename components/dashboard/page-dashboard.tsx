@@ -12,7 +12,6 @@ import {
   useFieldArray,
   type UseFieldArrayReturn,
 } from "react-hook-form";
-import { usePathname, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -43,14 +42,6 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 type DashboardState = "idle" | "success" | "error";
 
 const sanitize = (value: string | undefined | null) => (value ?? "").trim();
-
-const navigationItems = [
-  {
-    id: "create",
-    label: "Sayfa oluştur",
-    href: "/create-page",
-  },
-] as const;
 
 const benefitsItemSchema = z.object({
   icon: z.string().min(1, "İkon URL zorunludur"),
@@ -828,8 +819,6 @@ export default function PageDashboard() {
   const { data, isLoading, mutate } = useSWR<{ pages: CmsPage[] }>("/api/pages", fetcher, {
     revalidateOnFocus: false,
   });
-  const router = useRouter();
-  const pathname = usePathname();
   const [selectedPage, setSelectedPage] = useState<CmsPage | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [statusState, setStatusState] = useState<DashboardState>("idle");
@@ -870,14 +859,6 @@ export default function PageDashboard() {
     form.reset(createDefaultValues(template));
   };
 
-  const handleNavigate = (href: string) => {
-    if (pathname !== href) {
-      router.push(href);
-    }
-    setSelectedPage(null);
-    resetFeedback();
-    resetForm();
-  };
 
   useEffect(() => {
     if (selectedPage) {
@@ -998,71 +979,8 @@ export default function PageDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-mint-pale via-white to-primary-50">
-      <aside className="relative hidden w-80 flex-col justify-between bg-gradient-to-b from-mint-dark to-charcoal-dark text-white xl:flex shadow-strong">
-        <div className="flex flex-1 flex-col gap-8 p-8">
-          <div className="rounded-3xl bg-white/10 backdrop-blur-sm px-6 py-8 border border-white/20 shadow-dental transition-all duration-300 hover:bg-white/15">
-            <h1 className="text-xl font-bold leading-snug bg-gradient-to-r from-white to-mint-pale bg-clip-text text-transparent">Swiss Dental Solutions</h1>
-            <p className="mt-4 text-sm text-white/90 leading-relaxed">
-              İçeriklerinizi tek noktadan yönetin, yayınlayın ve anında web sitesine yansıtın.
-            </p>
-            <Button
-              type="button"
-              onClick={() => handleNavigate("/create-page")}
-              className="mt-6 w-full justify-center rounded-2xl bg-white text-primary-600 shadow-medium hover:bg-mint-pale hover:shadow-dental hover:scale-105"
-              variant="ghost"
-            >
-              <PlusIcon className="h-5 w-5" />
-              Sayfa oluştur
-            </Button>
-          </div>
-
-          <nav className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.35em] text-white/70 font-semibold">Gezinme</p>
-            {navigationItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleNavigate(item.href)}
-                className={clsx(
-                  "group flex w-full items-center justify-between rounded-2xl px-5 py-3.5 text-left text-sm transition-all duration-300",
-                  pathname === item.href
-                    ? "bg-white/25 text-white shadow-dental border border-white/30 scale-105"
-                    : "bg-white/8 text-white/80 hover:bg-white/15 hover:text-white hover:scale-102 border border-white/10",
-                )}
-              >
-                <span className="font-semibold">{item.label}</span>
-                <span className={clsx(
-                  "text-lg transition-transform duration-300",
-                  pathname === item.href ? "translate-x-1" : "group-hover:translate-x-1"
-                )}>{"›"}</span>
-              </button>
-            ))}
-          </nav>
-
-          <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.35em] text-white/70 font-semibold">Şablonlar</p>
-            <div className="space-y-3">
-              {TEMPLATE_OPTIONS.map((option) => (
-                <div
-                  key={option.id}
-                  className="group rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-4 shadow-soft hover:shadow-dental hover:bg-white/15 hover:border-white/30 transition-all duration-300 hover:scale-102"
-                >
-                  <p className="text-sm font-bold text-white group-hover:text-mint-pale transition-colors">{option.label}</p>
-                  <p className="mt-1.5 text-xs text-white/80 leading-relaxed">{option.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-white/20 bg-white/5 p-6 text-xs text-white/70 backdrop-blur-sm">
-          <p className="leading-relaxed">💡 Şablon verilerini düzenlerken alanları boş bırakmanız durumunda varsayılan içerik kullanılır.</p>
-        </div>
-      </aside>
-
-      <div className="flex-1 px-4 py-8 sm:px-8 lg:px-12">
-        <div className="mx-auto flex max-w-6xl flex-col gap-8">
+    <div className="px-4 py-8 sm:px-8 lg:px-12">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8">
           <div className="relative overflow-hidden flex flex-col gap-6 rounded-3xl bg-gradient-to-br from-mint via-primary-500 to-primary-600 p-8 text-white shadow-strong border border-primary-400/20 md:flex-row md:items-center md:justify-between">
             <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-mint-light/10 rounded-full blur-2xl translate-y-16 -translate-x-16"></div>
@@ -1105,118 +1023,118 @@ export default function PageDashboard() {
 
           <div className="grid gap-6 xl:grid-cols-[1fr_1.65fr]">
             <Card className="space-y-6 p-6 xl:p-8 shadow-medium animate-fade-in">
-                <header className="flex flex-col gap-3 pb-4 border-b border-gray-100 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
-                      📚 Sayfalar
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Taslak ve yayındaki tüm sayfalarınızı buradan yönetebilirsiniz.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2 shrink-0"
-                    onClick={() => {
-                      setSelectedPage(null);
-                      resetForm();
-                    }}
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                    Yeni Sayfa
-                  </Button>
-                </header>
-
-                <div className="space-y-4">
-                  {isLoading && (
-                    <div className="flex items-center justify-center gap-3 p-8 rounded-2xl bg-gradient-to-r from-primary-50 to-mint-pale/30">
-                      <div className="w-3 h-3 bg-primary-500 rounded-full animate-pulse"></div>
-                      <p className="text-sm text-primary-700 font-medium">Sayfalar yükleniyor...</p>
-                    </div>
-                  )}
-                  {!isLoading && (data?.pages.length ?? 0) === 0 && (
-                    <div className="rounded-2xl border-2 border-dashed border-primary-300 bg-gradient-to-br from-primary-50 via-mint-pale/30 to-white p-10 text-center shadow-soft">
-                      <div className="text-4xl mb-3">📄</div>
-                      <p className="text-sm text-primary-800 font-semibold mb-1">Henüz sayfa oluşturulmamış</p>
-                      <p className="text-xs text-primary-600">Sağdaki panelden ilk içeriğinizi oluşturun.</p>
-                    </div>
-                  )}
-                  {data?.pages.map((page) => (
-                    <div
-                      key={page.id}
-                      className="group flex flex-col gap-4 rounded-2xl border-2 border-gray-100 bg-gradient-to-br from-white to-gray-50/30 p-5 shadow-soft transition-all duration-300 hover:border-primary-300 hover:shadow-dental hover:scale-102 md:flex-row md:items-center"
-                    >
-                      <div className="flex-1 space-y-2">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <h4 className="text-lg font-semibold text-charcoal">{page.title}</h4>
-                          <Badge tone={page.status === "published" ? "success" : "gray"}>
-                            {page.status === "published" ? "Yayında" : "Taslak"}
-                          </Badge>
-                          <Badge tone="gray">{TEMPLATE_LABEL_MAP[page.template as TemplateOptionId]}</Badge>
-                        </div>
-                        <p className="text-sm text-gray-500">/{page.slug}</p>
-                        {page.excerpt && (
-                          <p className="text-sm text-gray-600">{page.excerpt}</p>
-                        )}
-                        <p className="text-xs text-gray-400">
-                          Güncelleme: {new Date(page.updatedAt).toLocaleString("tr-TR")}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => setSelectedPage(page)}
-                        >
-                          <PencilSquareIcon className="h-5 w-5" />
-                          Düzenle
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="gap-2 text-error-600 hover:bg-error-50"
-                          onClick={() => handleDelete(page)}
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                          Sil
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+              <header className="flex flex-col gap-3 pb-4 border-b border-gray-100 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
+                    📚 Sayfalar
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Taslak ve yayındaki tüm sayfalarınızı buradan yönetebilirsiniz.
+                  </p>
                 </div>
-              </Card>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 shrink-0"
+                  onClick={() => {
+                    setSelectedPage(null);
+                    resetForm();
+                  }}
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  Yeni Sayfa
+                </Button>
+              </header>
+
+              <div className="space-y-4">
+                {isLoading && (
+                  <div className="flex items-center justify-center gap-3 p-8 rounded-2xl bg-gradient-to-r from-primary-50 to-mint-pale/30">
+                    <div className="w-3 h-3 bg-primary-500 rounded-full animate-pulse"></div>
+                    <p className="text-sm text-primary-700 font-medium">Sayfalar yükleniyor...</p>
+                  </div>
+                )}
+                {!isLoading && (data?.pages.length ?? 0) === 0 && (
+                  <div className="rounded-2xl border-2 border-dashed border-primary-300 bg-gradient-to-br from-primary-50 via-mint-pale/30 to-white p-10 text-center shadow-soft">
+                    <div className="text-4xl mb-3">📄</div>
+                    <p className="text-sm text-primary-800 font-semibold mb-1">Henüz sayfa oluşturulmamış</p>
+                    <p className="text-xs text-primary-600">Sağdaki panelden ilk içeriğinizi oluşturun.</p>
+                  </div>
+                )}
+                {data?.pages.map((page) => (
+                  <div
+                    key={page.id}
+                    className="group flex flex-col gap-4 rounded-2xl border-2 border-gray-100 bg-gradient-to-br from-white to-gray-50/30 p-5 shadow-soft transition-all duration-300 hover:border-primary-300 hover:shadow-dental hover:scale-102 md:flex-row md:items-center"
+                  >
+                    <div className="flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h4 className="text-lg font-semibold text-charcoal">{page.title}</h4>
+                        <Badge tone={page.status === "published" ? "success" : "gray"}>
+                          {page.status === "published" ? "Yayında" : "Taslak"}
+                        </Badge>
+                        <Badge tone="gray">{TEMPLATE_LABEL_MAP[page.template as TemplateOptionId]}</Badge>
+                      </div>
+                      <p className="text-sm text-gray-500">/{page.slug}</p>
+                      {page.excerpt && (
+                        <p className="text-sm text-gray-600">{page.excerpt}</p>
+                      )}
+                      <p className="text-xs text-gray-400">
+                        Güncelleme: {new Date(page.updatedAt).toLocaleString("tr-TR")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => setSelectedPage(page)}
+                      >
+                        <PencilSquareIcon className="h-5 w-5" />
+                        Düzenle
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2 text-error-600 hover:bg-error-50"
+                        onClick={() => handleDelete(page)}
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                        Sil
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
 
             <Card className="space-y-8 p-6 xl:p-9 shadow-medium animate-fade-in">
-                <header className="flex items-center justify-between pb-4 border-b border-gray-100">
-                  <div>
-                    <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
-                      {selectedPage ? "✏️ Sayfayı Düzenle" : "✨ Yeni Sayfa Oluştur"}
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Slug alanına yazdığınız değer frontend projesinde <code className="px-2 py-0.5 bg-primary-50 text-primary-700 rounded text-xs font-mono">/slug</code> olarak yayınlanır.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="gap-2 text-gray-600 hover:text-primary-600 shrink-0"
-                    onClick={() => {
-                      setSelectedPage(null);
-                      resetForm();
-                    }}
-                  >
-                    <ArrowPathIcon className="h-5 w-5" />
-                    Sıfırla
-                  </Button>
-                </header>
+              <header className="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div>
+                  <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
+                    {selectedPage ? "✏️ Sayfayı Düzenle" : "✨ Yeni Sayfa Oluştur"}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Slug alanına yazdığınız değer frontend projesinde <code className="px-2 py-0.5 bg-primary-50 text-primary-700 rounded text-xs font-mono">/slug</code> olarak yayınlanır.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 text-gray-600 hover:text-primary-600 shrink-0"
+                  onClick={() => {
+                    setSelectedPage(null);
+                    resetForm();
+                  }}
+                >
+                  <ArrowPathIcon className="h-5 w-5" />
+                  Sıfırla
+                </Button>
+              </header>
 
-                <form className="space-y-8" onSubmit={handleSubmit}>
-                  <section className="space-y-4 rounded-2xl border-2 border-gray-100 bg-gradient-to-br from-white to-mint-pale/10 shadow-sm p-4 md:p-6 transition-all duration-300 hover:border-primary-200 hover:shadow-medium">
+              <form className="space-y-8" onSubmit={handleSubmit}>
+                <section className="space-y-4 rounded-2xl border-2 border-gray-100 bg-gradient-to-br from-white to-mint-pale/10 shadow-sm p-4 md:p-6 transition-all duration-300 hover:border-primary-200 hover:shadow-medium">
                     <header className="space-y-1 pb-3 border-b border-gray-100">
                       <h4 className="text-sm font-bold text-primary-700 flex items-center gap-2">
                         📝 Temel bilgiler
@@ -1341,11 +1259,10 @@ export default function PageDashboard() {
                       )}
                     </Button>
                   </div>
-                </form>
+              </form>
             </Card>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
