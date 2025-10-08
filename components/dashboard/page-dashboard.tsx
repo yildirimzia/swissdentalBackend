@@ -12,6 +12,7 @@ import {
   useFieldArray,
   type UseFieldArrayReturn,
 } from "react-hook-form";
+import { usePathname, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -31,16 +32,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import type { CmsPage } from "@/lib/types/page";
+import {
+  TEMPLATE_OPTIONS,
+  TEMPLATE_LABEL_MAP,
+  type TemplateOptionId,
+} from "@/components/dashboard/templates";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
-type TemplateOptionId = "default" | "benefits_for_patients";
-
-type NavigationSection = "create";
 
 type DashboardState = "idle" | "success" | "error";
 
 const sanitize = (value: string | undefined | null) => (value ?? "").trim();
+
+const navigationItems = [
+  {
+    id: "create",
+    label: "Sayfa oluştur",
+    href: "/create-page",
+  },
+] as const;
 
 const benefitsItemSchema = z.object({
   icon: z.string().min(1, "İkon URL zorunludur"),
@@ -283,28 +293,6 @@ Yenilik ve en yüksek kaliteye olan bağlılığımız, seramik implantolojideki
   },
 };
 
-const TEMPLATE_OPTIONS: Array<{
-  id: TemplateOptionId;
-  label: string;
-  description: string;
-}> = [
-  {
-    id: "default",
-    label: "Serbest içerik",
-    description: "Markdown alanını kullanarak tamamen özgün içerikler oluşturun.",
-  },
-  {
-    id: "benefits_for_patients",
-    label: "Hasta faydaları",
-    description: "Hazır bloklarla zengin hasta odaklı bir sayfa şablonu kullanın.",
-  },
-];
-
-const TEMPLATE_LABEL_MAP: Record<TemplateOptionId, string> = {
-  default: "Serbest içerik",
-  benefits_for_patients: "Hasta faydaları",
-};
-
 const deepClone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 
 const mergeBenefitsTemplateData = (
@@ -404,7 +392,7 @@ const formSchema = z.object({
   slug: z
     .string()
     .min(2, "Minimum 2 karakter")
-    .regex(/^[a-z0-9\-]+$/, "Sadece küçük harf, rakam ve tire kullanılabilir"),
+    .regex(/^[a-z0-9-]+$/, "Sadece küçük harf, rakam ve tire kullanılabilir"),
   title: z.string().min(3, "Başlık en az 3 karakter olmalı"),
   excerpt: z.string().optional(),
   heroTitle: z.string().optional(),
@@ -444,18 +432,6 @@ const createDefaultValues = (template: TemplateOptionId = "default"): FormSchema
   return base;
 };
 
-const navigationItems: Array<{
-  id: NavigationSection;
-  label: string;
-  description: string;
-}> = [
-  {
-    id: "create",
-    label: "Sayfa oluştur",
-    description: "Yeni sayfalar ekleyin, mevcut içerikleri yönetin",
-  },
-];
-
 function BenefitsTemplateEditor({
   form,
   arrays,
@@ -470,16 +446,20 @@ function BenefitsTemplateEditor({
   }
 
   return (
-    <Card className="space-y-8">
-      <header className="space-y-2">
-        <h3 className="text-lg font-semibold text-charcoal">Hasta faydaları şablonu</h3>
-        <p className="text-sm text-gray-500">
+    <Card className="space-y-8 p-6 border-2 border-primary-100">
+      <header className="space-y-2 pb-4 border-b border-primary-100">
+        <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
+          🏥 Hasta faydaları şablonu
+        </h3>
+        <p className="text-sm text-gray-600 leading-relaxed">
           Aşağıdaki alanlar seçtiğiniz şablonun bileşenlerini doldurur. Tüm girdiler yayınlandığında doğrudan frontend'e aktarılır.
         </p>
       </header>
 
-      <section className="space-y-4">
-        <h4 className="text-sm font-semibold text-primary-700">Hero Alanı</h4>
+      <section className="space-y-4 p-5 rounded-2xl bg-gradient-to-br from-mint-pale/30 to-white border border-primary-100">
+        <h4 className="text-sm font-bold text-primary-700 flex items-center gap-2 pb-2 border-b border-primary-100">
+          🎯 Hero Alanı
+        </h4>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="hero-eyebrow">Üst etiket</Label>
@@ -535,9 +515,11 @@ function BenefitsTemplateEditor({
 
         <div className="space-y-4">
           {arrays.whyCeramicItems.fields.map((field, index) => (
-            <div key={field.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-inner-soft space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-primary-700">Kart #{index + 1}</p>
+            <div key={field.id} className="group rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50/50 p-5 shadow-sm hover:border-primary-300 hover:shadow-medium transition-all duration-300 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                <p className="text-sm font-bold text-primary-700 flex items-center gap-2">
+                  📋 Kart #{index + 1}
+                </p>
                 {arrays.whyCeramicItems.fields.length > 1 && (
                   <Button
                     type="button"
@@ -846,11 +828,12 @@ export default function PageDashboard() {
   const { data, isLoading, mutate } = useSWR<{ pages: CmsPage[] }>("/api/pages", fetcher, {
     revalidateOnFocus: false,
   });
+  const router = useRouter();
+  const pathname = usePathname();
   const [selectedPage, setSelectedPage] = useState<CmsPage | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [statusState, setStatusState] = useState<DashboardState>("idle");
   const [isPending, startTransition] = useTransition();
-  const [activeSection, setActiveSection] = useState<NavigationSection>("create");
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
@@ -885,6 +868,15 @@ export default function PageDashboard() {
 
   const resetForm = (template: TemplateOptionId = "default") => {
     form.reset(createDefaultValues(template));
+  };
+
+  const handleNavigate = (href: string) => {
+    if (pathname !== href) {
+      router.push(href);
+    }
+    setSelectedPage(null);
+    resetFeedback();
+    resetForm();
   };
 
   useEffect(() => {
@@ -1005,91 +997,93 @@ export default function PageDashboard() {
     }
   };
 
-  const activateSection = (section: NavigationSection) => {
-    setActiveSection(section);
-    if (section === "create") {
-      setSelectedPage(null);
-      resetFeedback();
-      resetForm();
-    }
-  };
-
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-primary-50 via-cream to-white">
-      <aside className="relative hidden w-80 flex-col justify-between bg-[#033f3a] text-white xl:flex">
-        <div className="flex flex-1 flex-col gap-10 p-8">
-          <div className="rounded-3xl bg-white/8 px-6 py-8">
-            <h1 className="text-xl font-semibold leading-snug">Swiss Dental Solutions</h1>
-            <p className="mt-4 text-sm text-white/80">
+    <div className="flex min-h-screen bg-gradient-to-br from-mint-pale via-white to-primary-50">
+      <aside className="relative hidden w-80 flex-col justify-between bg-gradient-to-b from-mint-dark to-charcoal-dark text-white xl:flex shadow-strong">
+        <div className="flex flex-1 flex-col gap-8 p-8">
+          <div className="rounded-3xl bg-white/10 backdrop-blur-sm px-6 py-8 border border-white/20 shadow-dental transition-all duration-300 hover:bg-white/15">
+            <h1 className="text-xl font-bold leading-snug bg-gradient-to-r from-white to-mint-pale bg-clip-text text-transparent">Swiss Dental Solutions</h1>
+            <p className="mt-4 text-sm text-white/90 leading-relaxed">
               İçeriklerinizi tek noktadan yönetin, yayınlayın ve anında web sitesine yansıtın.
             </p>
             <Button
               type="button"
-              onClick={() => activateSection("create")}
-              className="mt-6 w-full justify-center rounded-2xl bg-white text-primary-600 shadow-soft hover:bg-primary-50"
+              onClick={() => handleNavigate("/create-page")}
+              className="mt-6 w-full justify-center rounded-2xl bg-white text-primary-600 shadow-medium hover:bg-mint-pale hover:shadow-dental hover:scale-105"
               variant="ghost"
             >
+              <PlusIcon className="h-5 w-5" />
               Sayfa oluştur
             </Button>
           </div>
 
-          <nav className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.35em] text-white/60">Gezinme</p>
+          <nav className="space-y-3">
+            <p className="text-xs uppercase tracking-[0.35em] text-white/70 font-semibold">Gezinme</p>
             {navigationItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => activateSection(item.id)}
+                onClick={() => handleNavigate(item.href)}
                 className={clsx(
-                  "flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition",
-                  activeSection === item.id
-                    ? "bg-white/20 text-white shadow-dental"
-                    : "bg-white/5 text-white/75 hover:bg-white/15",
+                  "group flex w-full items-center justify-between rounded-2xl px-5 py-3.5 text-left text-sm transition-all duration-300",
+                  pathname === item.href
+                    ? "bg-white/25 text-white shadow-dental border border-white/30 scale-105"
+                    : "bg-white/8 text-white/80 hover:bg-white/15 hover:text-white hover:scale-102 border border-white/10",
                 )}
               >
-                <span className="font-medium">{item.label}</span>
-                <span className="text-xs text-white/50">›</span>
+                <span className="font-semibold">{item.label}</span>
+                <span className={clsx(
+                  "text-lg transition-transform duration-300",
+                  pathname === item.href ? "translate-x-1" : "group-hover:translate-x-1"
+                )}>›</span>
               </button>
             ))}
           </nav>
 
           <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.35em] text-white/60">Şablonlar</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-white/70 font-semibold">Şablonlar</p>
             <div className="space-y-3">
               {TEMPLATE_OPTIONS.map((option) => (
                 <div
                   key={option.id}
-                  className="rounded-2xl border border-white/15 bg-white/8 p-4 shadow-soft"
+                  className="group rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-4 shadow-soft hover:shadow-dental hover:bg-white/15 hover:border-white/30 transition-all duration-300 hover:scale-102"
                 >
-                  <p className="text-sm font-semibold text-white">{option.label}</p>
-                  <p className="mt-1 text-xs text-white/70">{option.description}</p>
+                  <p className="text-sm font-bold text-white group-hover:text-mint-pale transition-colors">{option.label}</p>
+                  <p className="mt-1.5 text-xs text-white/80 leading-relaxed">{option.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="border-t border-white/10 p-6 text-xs text-white/60">
-          Şablon verilerini düzenlerken alanları boş bırakmanız durumunda varsayılan içerik kullanılır.
+        <div className="border-t border-white/20 bg-white/5 p-6 text-xs text-white/70 backdrop-blur-sm">
+          <p className="leading-relaxed">💡 Şablon verilerini düzenlerken alanları boş bırakmanız durumunda varsayılan içerik kullanılır.</p>
         </div>
       </aside>
 
       <div className="flex-1 px-4 py-8 sm:px-8 lg:px-12">
         <div className="mx-auto flex max-w-6xl flex-col gap-8">
-          <div className="flex flex-col gap-6 rounded-3xl bg-gradient-to-br from-mint to-primary-600 p-8 text-white shadow-strong md:flex-row md:items-center md:justify-between">
-            <div className="space-y-4">
-              <p className="text-sm uppercase tracking-[0.2em] text-white/80">Swiss Dental CMS</p>
-              <h2 className="text-3xl font-semibold md:text-4xl">İçerik Yönetim Paneli</h2>
-              <p className="max-w-2xl text-sm md:text-base text-white/80">
+          <div className="relative overflow-hidden flex flex-col gap-6 rounded-3xl bg-gradient-to-br from-mint via-primary-500 to-primary-600 p-8 text-white shadow-strong border border-primary-400/20 md:flex-row md:items-center md:justify-between">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-mint-light/10 rounded-full blur-2xl translate-y-16 -translate-x-16"></div>
+            <div className="space-y-4 relative z-10">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20">
+                <span className="w-2 h-2 bg-success-400 rounded-full animate-pulse"></span>
+                <p className="text-xs uppercase tracking-[0.2em] text-white/90 font-semibold">Swiss Dental CMS</p>
+              </div>
+              <h2 className="text-3xl font-bold md:text-4xl bg-gradient-to-r from-white to-mint-pale bg-clip-text text-transparent">İçerik Yönetim Paneli</h2>
+              <p className="max-w-2xl text-sm md:text-base text-white/90 leading-relaxed">
                 Yeni sayfalar oluşturun, içerikleri düzenleyin ve sitenizi dakikalar içinde güncelleyin.
               </p>
             </div>
-            <div className="grid gap-3 text-sm text-right">
-              <span className="text-xs uppercase tracking-[0.3em] text-white/70">Durum</span>
+            <div className="grid gap-4 text-sm relative z-10">
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase tracking-[0.3em] text-white/80 font-semibold">📊 Durum</span>
+              </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
-                <Badge tone="success">Yayında: {publishedCount}</Badge>
-                <Badge tone="gray">Taslak: {draftCount}</Badge>
-                <Badge>Toplam Sayfa: {data?.pages.length ?? 0}</Badge>
+                <Badge tone="success" className="shadow-medium">✓ Yayında: {publishedCount}</Badge>
+                <Badge tone="gray" className="shadow-medium">📝 Taslak: {draftCount}</Badge>
+                <Badge className="shadow-medium">📄 Toplam: {data?.pages.length ?? 0}</Badge>
               </div>
             </div>
           </div>
@@ -1109,20 +1103,21 @@ export default function PageDashboard() {
             </Card>
           )}
 
-          {activeSection === "create" && (
-            <div className="grid gap-6 xl:grid-cols-[1fr_1.65fr]">
-              <Card className="space-y-6 p-6 xl:p-8 shadow-medium">
-                <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="grid gap-6 xl:grid-cols-[1fr_1.65fr]">
+            <Card className="space-y-6 p-6 xl:p-8 shadow-medium animate-fade-in">
+                <header className="flex flex-col gap-3 pb-4 border-b border-gray-100 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-charcoal">Sayfalar</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
+                      📚 Sayfalar
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
                       Taslak ve yayındaki tüm sayfalarınızı buradan yönetebilirsiniz.
                     </p>
                   </div>
                   <Button
                     type="button"
                     variant="outline"
-                    className="gap-2"
+                    className="gap-2 shrink-0"
                     onClick={() => {
                       setSelectedPage(null);
                       resetForm();
@@ -1135,17 +1130,22 @@ export default function PageDashboard() {
 
                 <div className="space-y-4">
                   {isLoading && (
-                    <p className="text-sm text-gray-500">Sayfalar yükleniyor...</p>
+                    <div className="flex items-center justify-center gap-3 p-8 rounded-2xl bg-gradient-to-r from-primary-50 to-mint-pale/30">
+                      <div className="w-3 h-3 bg-primary-500 rounded-full animate-pulse"></div>
+                      <p className="text-sm text-primary-700 font-medium">Sayfalar yükleniyor...</p>
+                    </div>
                   )}
                   {!isLoading && (data?.pages.length ?? 0) === 0 && (
-                    <div className="rounded-2xl border border-dashed border-primary-200 bg-primary-50/50 p-10 text-center text-sm text-primary-800">
-                      Henüz sayfa oluşturulmamış. Sağdaki panelden ilk içeriğinizi oluşturun.
+                    <div className="rounded-2xl border-2 border-dashed border-primary-300 bg-gradient-to-br from-primary-50 via-mint-pale/30 to-white p-10 text-center shadow-soft">
+                      <div className="text-4xl mb-3">📄</div>
+                      <p className="text-sm text-primary-800 font-semibold mb-1">Henüz sayfa oluşturulmamış</p>
+                      <p className="text-xs text-primary-600">Sağdaki panelden ilk içeriğinizi oluşturun.</p>
                     </div>
                   )}
                   {data?.pages.map((page) => (
                     <div
                       key={page.id}
-                      className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-soft transition hover:border-primary-200 hover:shadow-medium md:flex-row md:items-center"
+                      className="group flex flex-col gap-4 rounded-2xl border-2 border-gray-100 bg-gradient-to-br from-white to-gray-50/30 p-5 shadow-soft transition-all duration-300 hover:border-primary-300 hover:shadow-dental hover:scale-102 md:flex-row md:items-center"
                     >
                       <div className="flex-1 space-y-2">
                         <div className="flex flex-wrap items-center gap-3">
@@ -1190,37 +1190,39 @@ export default function PageDashboard() {
                 </div>
               </Card>
 
-              <Card className="space-y-8 p-6 xl:p-9 shadow-medium">
-                <header className="flex items-center justify-between">
+            <Card className="space-y-8 p-6 xl:p-9 shadow-medium animate-fade-in">
+                <header className="flex items-center justify-between pb-4 border-b border-gray-100">
                   <div>
-                    <h3 className="text-lg font-semibold text-charcoal">
-                      {selectedPage ? "Sayfayı Düzenle" : "Yeni Sayfa Oluştur"}
+                    <h3 className="text-lg font-bold text-charcoal flex items-center gap-2">
+                      {selectedPage ? "✏️ Sayfayı Düzenle" : "✨ Yeni Sayfa Oluştur"}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      Slug alanına yazdığınız değer frontend projesinde `/slug` olarak yayınlanır.
+                    <p className="text-sm text-gray-600 mt-1">
+                      Slug alanına yazdığınız değer frontend projesinde <code className="px-2 py-0.5 bg-primary-50 text-primary-700 rounded text-xs font-mono">/slug</code> olarak yayınlanır.
                     </p>
                   </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="gap-2 text-gray-600 hover:text-charcoal"
+                    className="gap-2 text-gray-600 hover:text-primary-600 shrink-0"
                     onClick={() => {
                       setSelectedPage(null);
-                    resetForm();
-                  }}
-                >
-                  <ArrowPathIcon className="h-5 w-5" />
-                  Sıfırla
-                </Button>
+                      resetForm();
+                    }}
+                  >
+                    <ArrowPathIcon className="h-5 w-5" />
+                    Sıfırla
+                  </Button>
                 </header>
 
                 <form className="space-y-8" onSubmit={handleSubmit}>
-                  <section className="space-y-4 rounded-2xl border border-gray-100 bg-white shadow-inner-soft p-4 md:p-6">
-                    <header className="space-y-1">
-                      <h4 className="text-sm font-semibold text-primary-700">Temel bilgiler</h4>
-                      <p className="text-xs text-gray-500">
-                        Slug slug alanı sayfanın URL’sini belirler. Başlık kart listesinde görünür.
+                  <section className="space-y-4 rounded-2xl border-2 border-gray-100 bg-gradient-to-br from-white to-mint-pale/10 shadow-sm p-4 md:p-6 transition-all duration-300 hover:border-primary-200 hover:shadow-medium">
+                    <header className="space-y-1 pb-3 border-b border-gray-100">
+                      <h4 className="text-sm font-bold text-primary-700 flex items-center gap-2">
+                        📝 Temel bilgiler
+                      </h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        Slug alanı sayfanın URL'sini belirler. Başlık kart listesinde görünür.
                       </p>
                     </header>
                     <div className="grid gap-4 md:grid-cols-2">
@@ -1250,11 +1252,13 @@ export default function PageDashboard() {
                     </div>
                   </section>
 
-                  <section className="space-y-4 rounded-2xl border border-gray-100 bg-white shadow-inner-soft p-4 md:p-6">
-                    <header className="space-y-1">
-                      <h4 className="text-sm font-semibold text-primary-700">SEO & yayın</h4>
-                      <p className="text-xs text-gray-500">
-                        Şablon seçimi tasarımı belirler. Yayın durumu “Yayında” olduğunda frontend’de görünür.
+                  <section className="space-y-4 rounded-2xl border-2 border-gray-100 bg-gradient-to-br from-white to-primary-50/20 shadow-sm p-4 md:p-6 transition-all duration-300 hover:border-primary-200 hover:shadow-medium">
+                    <header className="space-y-1 pb-3 border-b border-gray-100">
+                      <h4 className="text-sm font-bold text-primary-700 flex items-center gap-2">
+                        🔍 SEO & yayın
+                      </h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        Şablon seçimi tasarımı belirler. Yayın durumu "Yayında" olduğunda frontend'de görünür.
                       </p>
                     </header>
                     <div className="grid gap-4 md:grid-cols-2">
@@ -1311,19 +1315,35 @@ export default function PageDashboard() {
                     <BenefitsTemplateEditor form={form} arrays={arrays} />
                   )}
 
-                  <div className="flex items-center justify-between rounded-2xl bg-primary-600/10 p-4">
-                    <p className="text-sm text-primary-700">
-                      Kaydetmeden önce içerikleri kontrol edin. Taslak olarak bırakabilir ya da yayımlayabilirsiniz.
-                    </p>
-                    <Button type="submit" className="gap-2" disabled={isPending}>
-                      <PlusIcon className="h-5 w-5" />
-                      {selectedPage ? "Sayfayı güncelle" : "Sayfayı oluştur"}
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-primary-50 to-mint-pale/50 border border-primary-200/50 p-5 shadow-soft">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">💾</span>
+                      <div>
+                        <p className="text-sm font-semibold text-primary-800">
+                          Kaydetmeye hazır mısınız?
+                        </p>
+                        <p className="text-xs text-primary-600 mt-0.5">
+                          İçerikleri kontrol edin. Taslak olarak bırakabilir ya da yayımlayabilirsiniz.
+                        </p>
+                      </div>
+                    </div>
+                    <Button type="submit" className="gap-2 shrink-0 shadow-medium" disabled={isPending}>
+                      {isPending ? (
+                        <>
+                          <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                          Kaydediliyor...
+                        </>
+                      ) : (
+                        <>
+                          <PlusIcon className="h-5 w-5" />
+                          {selectedPage ? "Sayfayı güncelle" : "Sayfayı oluştur"}
+                        </>
+                      )}
                     </Button>
                   </div>
                 </form>
-              </Card>
-            </div>
-          )}
+            </Card>
+          </div>
         </div>
       </div>
     </div>
