@@ -1,4 +1,4 @@
-\"use client";
+"use client";
 
 import {
   useEffect,
@@ -1035,7 +1035,7 @@ export default function PageDashboard() {
                 <span className={clsx(
                   "text-lg transition-transform duration-300",
                   pathname === item.href ? "translate-x-1" : "group-hover:translate-x-1"
-                )}>›</span>
+                )}>{"›"}</span>
               </button>
             ))}
           </nav>
@@ -1343,7 +1343,6 @@ export default function PageDashboard() {
                   </div>
                 </form>
             </Card>
-          </div>
           </div>
         </div>
       </div>
