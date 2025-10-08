@@ -1,4 +1,4 @@
 {
-  "/preview/components/page": "app/preview/components/page.js",
-  "/create-page/page": "app/create-page/page.js"
+  "/create-page/page": "app/create-page/page.js",
+  "/preview/components/page": "app/preview/components/page.js"
 }

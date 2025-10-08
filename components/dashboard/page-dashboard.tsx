@@ -432,11 +432,13 @@ function BenefitsTemplateEditor({
   form,
   arrays,
   selectedComponents,
+  setSelectedComponents,
   onOpenDialog,
 }: {
   form: ReturnType<typeof useForm<FormSchema>>;
   arrays: BenefitsArrayControls;
   selectedComponents: Set<BenefitsComponentType>;
+  setSelectedComponents: (components: Set<BenefitsComponentType>) => void;
   onOpenDialog: () => void;
 }) {
   const benefitsTemplate = form.watch("benefitsTemplate");
@@ -473,9 +475,23 @@ function BenefitsTemplateEditor({
 
       {selectedComponents.has("hero") && (
         <section className="space-y-4 p-5 rounded-2xl bg-gradient-to-br from-mint-pale/30 to-white border border-primary-100">
-          <h4 className="text-sm font-bold text-primary-700 flex items-center gap-2 pb-2 border-b border-primary-100">
-            🎯 Hero Alanı
-          </h4>
+          <div className="flex items-center justify-between pb-2 border-b border-primary-100">
+            <h4 className="text-sm font-bold text-primary-700 flex items-center gap-2">
+              🎯 Hero Alanı
+            </h4>
+            <button
+              type="button"
+              onClick={() => {
+                const newComponents = new Set(selectedComponents);
+                newComponents.delete("hero");
+                setSelectedComponents(newComponents);
+              }}
+              className="text-error-600 hover:text-error-700 hover:bg-error-50 p-1.5 rounded-lg transition-colors"
+              title="Bileşeni Sil"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="hero-eyebrow">Üst etiket</Label>
@@ -508,8 +524,22 @@ function BenefitsTemplateEditor({
       {selectedComponents.has("whyCeramic") && (
         <section className="space-y-4">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h4 className="text-sm font-semibold text-primary-700">Neden seramik kartları</h4>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-primary-700">Neden seramik kartları</h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newComponents = new Set(selectedComponents);
+                    newComponents.delete("whyCeramic");
+                    setSelectedComponents(newComponents);
+                  }}
+                  className="text-error-600 hover:text-error-700 hover:bg-error-50 p-1.5 rounded-lg transition-colors"
+                  title="Bileşeni Sil"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              </div>
               <p className="text-xs text-gray-500">Kart ekleyip kaldırabilir ve ikon / bağlantı bilgilerini düzenleyebilirsiniz.</p>
             </div>
             <Button
@@ -580,14 +610,42 @@ function BenefitsTemplateEditor({
 
       {selectedComponents.has("introText") && (
         <section className="space-y-4">
-          <h4 className="text-sm font-semibold text-primary-700">Giriş paragrafı</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-primary-700">Giriş paragrafı</h4>
+            <button
+              type="button"
+              onClick={() => {
+                const newComponents = new Set(selectedComponents);
+                newComponents.delete("introText");
+                setSelectedComponents(newComponents);
+              }}
+              className="text-error-600 hover:text-error-700 hover:bg-error-50 p-1.5 rounded-lg transition-colors"
+              title="Bileşeni Sil"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </div>
           <Textarea rows={4} {...form.register("benefitsTemplate.introText.text")} />
         </section>
       )}
 
       {selectedComponents.has("sectionImage") && (
         <section className="space-y-4">
-          <h4 className="text-sm font-semibold text-primary-700">Arka plan görseli</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-primary-700">Arka plan görseli</h4>
+            <button
+              type="button"
+              onClick={() => {
+                const newComponents = new Set(selectedComponents);
+                newComponents.delete("sectionImage");
+                setSelectedComponents(newComponents);
+              }}
+              className="text-error-600 hover:text-error-700 hover:bg-error-50 p-1.5 rounded-lg transition-colors"
+              title="Bileşeni Sil"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Görsel URL</Label>
@@ -604,8 +662,22 @@ function BenefitsTemplateEditor({
       {selectedComponents.has("ceramicAdvantages") && (
         <section className="space-y-4">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h4 className="text-sm font-semibold text-primary-700">Seramik avantajları</h4>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-primary-700">Seramik avantajları</h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newComponents = new Set(selectedComponents);
+                    newComponents.delete("ceramicAdvantages");
+                    setSelectedComponents(newComponents);
+                  }}
+                  className="text-error-600 hover:text-error-700 hover:bg-error-50 p-1.5 rounded-lg transition-colors"
+                  title="Bileşeni Sil"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              </div>
               <p className="text-xs text-gray-500">Başlık ve kartları düzenleyin.</p>
             </div>
             <Button
@@ -681,7 +753,21 @@ function BenefitsTemplateEditor({
 
       {selectedComponents.has("serviceBlock") && (
         <section className="space-y-4">
-          <h4 className="text-sm font-semibold text-primary-700">Hizmet bloğu</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-primary-700">Hizmet bloğu</h4>
+            <button
+              type="button"
+              onClick={() => {
+                const newComponents = new Set(selectedComponents);
+                newComponents.delete("serviceBlock");
+                setSelectedComponents(newComponents);
+              }}
+              className="text-error-600 hover:text-error-700 hover:bg-error-50 p-1.5 rounded-lg transition-colors"
+              title="Bileşeni Sil"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Eyebrow</Label>
@@ -718,8 +804,22 @@ function BenefitsTemplateEditor({
       {selectedComponents.has("slider") && (
         <section className="space-y-4">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h4 className="text-sm font-semibold text-primary-700">Referans slider</h4>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-primary-700">Referans slider</h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newComponents = new Set(selectedComponents);
+                    newComponents.delete("slider");
+                    setSelectedComponents(newComponents);
+                  }}
+                  className="text-error-600 hover:text-error-700 hover:bg-error-50 p-1.5 rounded-lg transition-colors"
+                  title="Bileşeni Sil"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              </div>
               <p className="text-xs text-gray-500">Hastaların deneyimlerini buradan düzenleyin.</p>
             </div>
             <Button
@@ -796,7 +896,21 @@ function BenefitsTemplateEditor({
 
       {selectedComponents.has("pioneeringWork") && (
         <section className="space-y-4">
-          <h4 className="text-sm font-semibold text-primary-700">Öncü çalışma</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-primary-700">Öncü çalışma</h4>
+            <button
+              type="button"
+              onClick={() => {
+                const newComponents = new Set(selectedComponents);
+                newComponents.delete("pioneeringWork");
+                setSelectedComponents(newComponents);
+              }}
+              className="text-error-600 hover:text-error-700 hover:bg-error-50 p-1.5 rounded-lg transition-colors"
+              title="Bileşeni Sil"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Eyebrow</Label>
@@ -832,7 +946,21 @@ function BenefitsTemplateEditor({
 
       {selectedComponents.has("doctor") && (
         <section className="space-y-4">
-          <h4 className="text-sm font-semibold text-primary-700">Doktor bilgisi</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-primary-700">Doktor bilgisi</h4>
+            <button
+              type="button"
+              onClick={() => {
+                const newComponents = new Set(selectedComponents);
+                newComponents.delete("doctor");
+                setSelectedComponents(newComponents);
+              }}
+              className="text-error-600 hover:text-error-700 hover:bg-error-50 p-1.5 rounded-lg transition-colors"
+              title="Bileşeni Sil"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>İsim</Label>
@@ -1338,6 +1466,7 @@ export default function PageDashboard() {
                       form={form} 
                       arrays={arrays} 
                       selectedComponents={selectedComponents}
+                      setSelectedComponents={setSelectedComponents}
                       onOpenDialog={openComponentDialog}
                     />
                   )}
